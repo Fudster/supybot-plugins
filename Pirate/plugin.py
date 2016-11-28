@@ -46,6 +46,26 @@ class Pirate(callbacks.Plugin):
     """English to Pirate translator"""
     pass
 
+pirate = {}
+pirate['sir'] = 'matey'
+pirate['hotel'] = 'fleabag inn'
+pirate['student'] = 'swabbie'
+pirate['boy'] = 'matey'
+pirate['restaurant'] = 'galley'
+# and so on
+
+psentence = []
+def pirate(psentence)
+	words = sentence.split()
+	for aword in words:
+		if aword in pirate:
+        		psentence.append(pirate[aword])
+    		else:
+        		psentence.append(aword)
+ 	irc.reply(_(" ".join(pentence))
+#return(" ".join(psentence))
+
+
 
 Class = Pirate
 
