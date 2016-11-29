@@ -44,30 +44,48 @@ except ImportError:
 
 class Pirate(callbacks.Plugin):
     """English to Pirate translator"""
-    pass
+    
+    def pirate(self, irc, msg, args, sentence):
+        """<phrase>
+        Converts Phrase into Pirate speak"""
+        pirate = {
+            "sir":      "matey",
+            "hotel":    "fleabag inn",
+            "student":  "swabbie",
+            "boy":      "lad",
+            "girl":     "lass",
+            "little":   "wee",
+            "yes":      "aye",
+            "no":       "arr",
+            "beer":     "rum",
+            "treasure": "booty",
+        }
 
-pirate = {}
-pirate['sir'] = 'matey'
-pirate['hotel'] = 'fleabag inn'
-pirate['student'] = 'swabbie'
-pirate['boy'] = 'matey'
-pirate['restaurant'] = 'galley'
-# and so on
+        phrase = sentence.split()
+        newphrase = []
+        for word in phrase:
+            if word in pirate.keys():
+                newphrase.append(pirate[word])
+            else:
+                newphrase.append(word)
+        irc.reply(newphrase, prefixNick=False)
 
-psentence = []
-def pirate(psentence)
-	words = sentence.split()
-	for aword in words:
-		if aword in pirate:
-        		psentence.append(pirate[aword])
-    		else:
-        		psentence.append(aword)
- 	irc.reply(_(" ".join(pentence))
-#return(" ".join(psentence))
+    pirate = wrap(pirate, ['text'])
+    
+    def pingp(self, irc, msg, args):
+        """takes no arguments
+        Checks to see if the bot is alive.
+			"""
+		
+        irc.reply("PING!")
+    pingp = wrap(pingp)
 
+    def psay(self,irc,msg,args,text):
+        """<text>
+        Echos back your text
+        """
+        irc.reply(text)
 
-
+    psay = wrap(psay,['text'])
+    
 Class = Pirate
-
-
-# vim:set shiftwidth=4 softtabstop=4 expandtab textwidth=79:

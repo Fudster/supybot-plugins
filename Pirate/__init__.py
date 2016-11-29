@@ -40,12 +40,12 @@ import supybot.world as world
 __version__ = ""
 
 # XXX Replace this with an appropriate author or supybot.Author instance.
-__author__ = supybot.authors.unknown
-
+fudster = supybot.Author('Bradley', 'Fudster','none')
+__author__ = fudster
 # This is a dictionary mapping supybot.Author instances to lists of
 # contributions.
-__contributors__ = {}
-
+kspencer = supybot.Author('Ken Spencer', 'IotaSpencer', 'iota@electrocode.net')
+__contributors__ = {kspencer: ["helped out with learning supybot"],}
 # This is a url where the most recent plugin package can be downloaded.
 __url__ = ''
 

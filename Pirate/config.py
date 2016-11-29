@@ -46,6 +46,8 @@ def configure(advanced):
     # registry as appropriate.
     from supybot.questions import expect, anything, something, yn
     conf.registerPlugin('Pirate', True)
+Pirate = conf.registerPlugin('Pirate')
+
 
 
 Pirate = conf.registerPlugin('Pirate')
