@@ -45,7 +45,7 @@ except ImportError:
 
 class Pirate(callbacks.Plugin):
     """English to Pirate translator"""
-    exclude = set(string.punctuation)
+    
     
 
     def pirate(self, irc, msg, args, sentence):
@@ -63,6 +63,7 @@ class Pirate(callbacks.Plugin):
             "beer":     "rum",
             "treasure": "booty",
         }
+        exclude = set(string.punctuation)
         def pun(s):
             return ''.join(ch for ch in s if ch not in exclude)
         sentence2 = pun(sentence)
