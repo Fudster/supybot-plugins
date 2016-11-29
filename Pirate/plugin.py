@@ -64,7 +64,7 @@ class Pirate(callbacks.Plugin):
             "treasure": "booty",
         }
         def pun(s):
-        return ''.join(ch for ch in s if ch not in exclude)
+            return ''.join(ch for ch in s if ch not in exclude)
         sentence2 = sentence.pun()
         phrase = sentence2.split()
         newphrase = []
