@@ -68,7 +68,7 @@ class Pirate(callbacks.Plugin):
                 newphrase.append(pirate[word])
             else:
                 newphrase.append(word)
-        irc.reply(newphrase, prefixNick=False)
+        irc.reply(" ".join(newphrase), prefixNick=False)
 
     pirate = wrap(pirate, ['text'])
     
