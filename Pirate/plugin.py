@@ -65,7 +65,7 @@ class Pirate(callbacks.Plugin):
         }
         def pun(s):
             return ''.join(ch for ch in s if ch not in exclude)
-        sentence2 = sentence.pun()
+        sentence2 = pun(sentence)
         phrase = sentence2.split()
         newphrase = []
         for word in phrase:
