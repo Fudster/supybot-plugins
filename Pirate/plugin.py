@@ -33,6 +33,7 @@ from supybot.commands import *
 import supybot.plugins as plugins
 import supybot.ircutils as ircutils
 import supybot.callbacks as callbacks
+import strings
 try:
     from supybot.i18n import PluginInternationalization
     _ = PluginInternationalization('Pirate')
@@ -44,7 +45,10 @@ except ImportError:
 
 class Pirate(callbacks.Plugin):
     """English to Pirate translator"""
-    
+    exclude = set(string.punctuation)
+    def pun(s):
+        return ''.join(ch for ch in s if ch not in exclude)
+
     def pirate(self, irc, msg, args, sentence):
         """<phrase>
         Converts Phrase into Pirate speak"""
@@ -60,8 +64,8 @@ class Pirate(callbacks.Plugin):
             "beer":     "rum",
             "treasure": "booty",
         }
-
-        phrase = sentence.split()
+        sentence2 = pun(sentence)
+        phrase = sentence2.split()
         newphrase = []
         for word in phrase:
             if word in pirate.keys():
