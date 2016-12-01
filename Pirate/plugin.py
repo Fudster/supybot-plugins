@@ -62,6 +62,17 @@ class Pirate(callbacks.Plugin):
             "no":       "arr",
             "beer":     "rum",
             "treasure": "booty",
+            "my":       "me"
+            "your":     "yer"
+            "ass":      "arse"
+            "hello":    "ahoy"
+            "madam":    "proud beauty"
+            "old":      "barnacle-covered"
+            "bank"      "buried trasure"
+            "nearby"    "broadside"
+            "where is"  "whar be"
+            "happy"     "grog-filled"
+            "mail"      "market"
         }
         exclude = set(string.punctuation)
         def pun(s):
