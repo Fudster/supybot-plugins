@@ -46,11 +46,12 @@ class DOND(callbacks.Plugin):
         self.__parent = super(DOND, self)
         self.__parent.__init__(irc)
 
-        self.player = defaultdict(str)
+        self.player = defaultdict(lambda: str)
+        
 
     def _stopGame(self, irc, msg, channel=None, forced=None):
         channel = channel or msg.args[0]
-        del self.player[channel]
+        del self.player[irc.network][channel]
 
         if forced is None:
             irc.reply(_('Game stopped.'))
@@ -67,18 +68,18 @@ class DOND(callbacks.Plugin):
         newNick = msg.args[0]
 
         for channel in self.player:
-            if self.player[channel] == oldNick:
-                self.player[channel] = newNick
+            if self.player[irc.network][channel] == oldNick:
+                self.player[irc.network][channel] = newNick
 
     def doPart(self, irc, msg):
         channel = msg.args[0]
 
-        if self.player[channel] == msg.nick:
+        if self.player[irc.network][channel] == msg.nick:
             self._stopGame(irc, msg)
 
     def doQuit(self, irc, msg):
         for channel in self.player:
-            if self.player[channel] == msg.nick:
+            if self.player[irc.network][channel] == msg.nick:
                 self._stopGame(irc, msg)
 
     @wrap(['inChannel'])
@@ -92,11 +93,11 @@ class DOND(callbacks.Plugin):
             irc.error(_('This command may only be used in a channel.'))
             return
 
-        if self.player[channel]:
+        if self.player[irc.network][channel]:
             irc.error(_('A game is already in progress in this channel.'))
             return
 
-        self.player[channel] = msg.nick
+        self.player[irc.network][channel] = msg.nick
         irc.reply('Game started.', prefixNick=True)
 
     @wrap(['channel'])
@@ -108,9 +109,9 @@ class DOND(callbacks.Plugin):
         itself.
         """
 
-        if self.player[channel]:
+        if self.player[irc.network][channel]:
             irc.reply(_("There is currently an active game in %s started by %s.") %
-                      (channel, self.player[channel]))
+                      (channel, self.player[irc.network][channel]))
         else:
             irc.reply(_("No game is currently running in %s.") % channel)
 
@@ -129,7 +130,7 @@ class DOND(callbacks.Plugin):
         isOp = (irc.state.channels[channel].isOp(msg.nick) or
                 ircdb.checkCapability(msg.prefix, cap))
 
-        if self.player[channel] is None:
+        if self.player[irc.network][channel] is None:
             irc.error(_('No game is currently running in %s.' % channel))
             return
 
@@ -146,12 +147,12 @@ class DOND(callbacks.Plugin):
             irc.error(_('This command may only be used in a channel.'))
             return
 
-        if self.player[channel] == msg.nick:
+        if self.player[irc.network][channel] == msg.nick:
             self._stopGame(irc, msg)
         else:
             irc.error(_('Only %s may stop the game. Admins may use the '
                         '--force flag to forcibly stop the game.') %
-                      self.player[channel])
+                      self.player[irc.network][channel])
             return
 
 
