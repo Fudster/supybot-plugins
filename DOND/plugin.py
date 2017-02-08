@@ -46,7 +46,7 @@ class DOND(callbacks.Plugin):
         self.__parent = super(DOND, self)
         self.__parent.__init__(irc)
 
-        self.player = defaultdict(lambda: str)
+        self.player =  defaultdict(lambda: defaultdict(str))
         
 
     def _stopGame(self, irc, msg, channel=None, forced=None):
