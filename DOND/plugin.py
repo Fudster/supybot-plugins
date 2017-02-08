@@ -25,26 +25,134 @@
 # CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE)
 # ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
 # POSSIBILITY OF SUCH DAMAGE.
-
 ###
 
-import supybot.utils as utils
-from supybot.commands import *
-import supybot.plugins as plugins
-import supybot.ircutils as ircutils
-import supybot.callbacks as callbacks
-try:
-    from supybot.i18n import PluginInternationalization
-    _ = PluginInternationalization('DOND')
-except ImportError:
-    # Placeholder that allows to run the plugin on a bot
-    # without the i18n module
-    _ = lambda x: x
+from collections import defaultdict
+
+from supybot import callbacks, commands, i18n, ircdb, ircmsgs, ircutils
+from supybot.commands import getopts, wrap
+
+_ = i18n.PluginInternationalization('DOND')
 
 
 class DOND(callbacks.Plugin):
-    """Deal Or No Deal Game."""
+    """
+    This plugin implements the Deal or No Deal game.
+    """
+
     threaded = True
+
+    def __init__(self, irc):
+        self.__parent = super(DOND, self)
+        self.__parent.__init__(irc)
+
+        self.player = defaultdict(str)
+
+    def _stopGame(self, irc, msg, channel=None, forced=None):
+        channel = channel or msg.args[0]
+        del self.player[channel]
+
+        if forced is None:
+            irc.reply(_('Game stopped.'))
+        else:
+            irc.queueMsg(ircmsgs.privmsg(
+                channel, _('Game forcibly stopped by %s.') % forced))
+
+            if msg.args[0] != channel:
+                # If foribly stopped in a private message, also reply there.
+                irc.replySuccess()
+
+    def doNick(self, irc, msg):
+        oldNick = msg.nick
+        newNick = msg.args[0]
+
+        for channel in self.player:
+            if self.player[channel] == oldNick:
+                self.player[channel] = newNick
+
+    def doPart(self, irc, msg):
+        channel = msg.args[0]
+
+        if self.player[channel] == msg.nick:
+            self._stopGame(irc, msg)
+
+    def doQuit(self, irc, msg):
+        for channel in self.player:
+            if self.player[channel] == msg.nick:
+                self._stopGame(irc, msg)
+
+    @wrap(['inChannel'])
+    def start(self, irc, msg, args, channel):
+        """takes no arguments
+
+        Starts a game of Deal or No Deal."""
+
+        if channel != msg.args[0]:
+            # The command is being called from a private message.
+            irc.error(_('This command may only be used in a channel.'))
+            return
+
+        if self.player[channel]:
+            irc.error(_('A game is already in progress in this channel.'))
+            return
+
+        self.player[channel] = msg.nick
+        irc.reply('Game started.', prefixNick=True)
+
+    @wrap(['channel'])
+    def status(self, irc, msg, args, channel):
+        """[<channel>]
+
+        Shows the current status of the game in <channel>, if one is running.
+        <channel> is only required if the message isn't sent in the channel
+        itself.
+        """
+
+        if self.player[channel]:
+            irc.reply(_("There is currently an active game in %s started by %s.") %
+                      (channel, self.player[channel]))
+        else:
+            irc.reply(_("No game is currently running in %s.") % channel)
+
+    @wrap([getopts({'force': ''}), 'inChannel'])
+    def stop(self, irc, msg, args, force, channel):
+        """[--force] [<channel>]
+
+        Stops the game currently in progress in this channel. You may only stop
+        the game if you are playing. Admins may forcibly stop a game using the
+        --force flag; this also works from a private message. <channel> is only
+        required if the message isn't sent in the channel itself.
+        """
+
+        cap = ircdb.makeChannelCapability(channel, 'op')
+
+        isOp = (irc.state.channels[channel].isOp(msg.nick) or
+                ircdb.checkCapability(msg.prefix, cap))
+
+        if self.player[channel] is None:
+            irc.error(_('No game is currently running in %s.' % channel))
+            return
+
+        if force:
+            if isOp:
+                self._stopGame(irc, msg, channel=channel, forced=msg.nick)
+            else:
+                irc.errorNoCapability(msg.prefix, 'admin')
+
+            return
+
+        if channel != msg.args[0]:
+            # The command is being called from a private message.
+            irc.error(_('This command may only be used in a channel.'))
+            return
+
+        if self.player[channel] == msg.nick:
+            self._stopGame(irc, msg)
+        else:
+            irc.error(_('Only %s may stop the game. Admins may use the '
+                        '--force flag to forcibly stop the game.') %
+                      self.player[channel])
+            return
 
 
 Class = DOND

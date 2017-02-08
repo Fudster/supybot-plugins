@@ -25,11 +25,10 @@
 # CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE)
 # ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
 # POSSIBILITY OF SUCH DAMAGE.
-
 ###
 
 """
-DOND: Deal Or No Deal Game.
+This plugin implements the Deal or No Deal game.
 """
 
 import supybot
@@ -40,7 +39,7 @@ import supybot.world as world
 __version__ = ""
 
 # XXX Replace this with an appropriate author or supybot.Author instance.
-__author__ = supybot.authors.unknown
+__author__ = supybot.Author('Fudster', 'Fudster', 'yofun111@gmail.com')
 
 # This is a dictionary mapping supybot.Author instances to lists of
 # contributions.
