@@ -45,7 +45,7 @@ class DOND(callbacks.Plugin):
     def __init__(self, irc):
         self.__parent = super(DOND, self)
         self.__parent.__init__(irc)
-        
+
         #Track If game is running on Network/Channel, If who is playing.
         self.player =  defaultdict(lambda: defaultdict(str))
 
@@ -61,8 +61,7 @@ class DOND(callbacks.Plugin):
     def _unopened_cases(self, irc, channel):
         numbers = [1, 2 ,3 ,3 ,3 ,3 ,4 ,5, 6, 7, 8, 9, 10, 11, 12, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26]
         return ", ".join((str(item) for item in numbers if item not in self.checkList[irc.network][channel]))
-        
-        
+
     def _stopGame(self, irc, msg, channel=None, forced=None):
         channel = channel or msg.args[0]
         del self.player[irc.network][channel]
@@ -146,7 +145,7 @@ class DOND(callbacks.Plugin):
         isOp = (irc.state.channels[channel].isOp(msg.nick) or
                 ircdb.checkCapability(msg.prefix, cap))
 
-        if self.player[irc.network][channel] is None:
+        if not self.player[irc.network][channel]:
             irc.error(_('No game is currently running in %s.' % channel))
             return
 
