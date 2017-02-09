@@ -45,10 +45,29 @@ class DOND(callbacks.Plugin):
     def __init__(self, irc):
         self.__parent = super(DOND, self)
         self.__parent.__init__(irc)
-
-        self.player =  defaultdict(lambda: defaultdict(str))
         
+        #Track If game is running on Network/Channel, If who is playing.
+        self.player =  defaultdict(lambda: defaultdict(str))
 
+        #Box values
+        self.boxes = defaultdict(lambda: defaultdict(str))
+        #Which cases are opened
+        self.checkList = defaultdict(lambda: defaultdict(str))
+        #Choosen case
+        self.yourCase = defaultdict(lambda: defaultdict(str))
+        #Choosen Case Value
+        self.YourCaseValue = defaultdict(lambda: defaultdict(str))
+        
+    def _startGame(self, irc, msg, channel=None):
+        self.player[irc.network][channel] = msg.nick
+        self.checkList[irc.network][channel] = {}
+        irc.reply(self._unopened_cases())
+
+    def _unopened_cases(self):
+        numbers = [1, 2 ,3 ,3 ,3 ,3 ,4 ,5, 6, 7, 8, 9, 10, 11, 12, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 27]
+        return ", ".join((str(item) for item in numbers if item not in self.checkList))
+        
+        
     def _stopGame(self, irc, msg, channel=None, forced=None):
         channel = channel or msg.args[0]
         del self.player[irc.network][channel]
@@ -97,8 +116,8 @@ class DOND(callbacks.Plugin):
             irc.error(_('A game is already in progress in this channel.'))
             return
 
-        self.player[irc.network][channel] = msg.nick
-        irc.reply('Game started.', prefixNick=True)
+        irc.reply('Welcome to the game of Deal Or No Deal!', prefixNick=True)
+        self._startGame(irc, msg)
 
     @wrap(['channel'])
     def status(self, irc, msg, args, channel):
