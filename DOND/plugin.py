@@ -28,6 +28,7 @@
 ###
 
 from collections import defaultdict
+import random
 
 from supybot import callbacks, commands, i18n, ircdb, ircmsgs, ircutils
 from supybot.commands import getopts, wrap
@@ -45,7 +46,7 @@ class DOND(callbacks.Plugin):
     def __init__(self, irc):
         self.__parent = super(DOND, self)
         self.__parent.__init__(irc)
-
+        
         #Track If game is running on Network/Channel, If who is playing.
         self.player =  defaultdict(lambda: defaultdict(str))
 
@@ -56,12 +57,25 @@ class DOND(callbacks.Plugin):
         #Choosen case
         self.yourCase = defaultdict(lambda: defaultdict(str))
         #Choosen Case Value
-        self.YourCaseValue = defaultdict(lambda: defaultdict(str))
+        self.yourCaseValue = defaultdict(lambda: defaultdict(str))
+        #bankOffer
+        self.bankOffer = defaultdict(lambda: defaultdict(str))
+        #Game Round
+        self.round = defaultdict(lambda: defaultdict(str))
+        #Number of cases opened this round.
+        self.casesOpened = defaultdict(lambda: defaultdict(str))
 
-    def _unopened_cases(self, irc, channel):
+    def _unopened(self, irc, channel, case=None):
         numbers = [1, 2, 3, 4 ,5, 6, 7, 8, 9, 10, 11, 12, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26]
-        return ", ".join((str(item) for item in numbers if item not in self.checkList[irc.network][channel]))
-
+        unopened = [str(item) for item in map(str, numbers) if item not in self.checkList[irc.network][channel]]
+        if case:
+            if case in unopened:
+                return True
+            else:
+                return False
+        return ", ".join(unopened)
+        
+        
     def _stopGame(self, irc, msg, channel=None, forced=None):
         channel = channel or msg.args[0]
         del self.player[irc.network][channel]
@@ -95,6 +109,17 @@ class DOND(callbacks.Plugin):
             if self.player[irc.network][channel] == msg.nick:
                 self._stopGame(irc, msg)
 
+    def _casesRequired(self, irc, channel):
+        round = {1: 6, 
+                 2: 5, 
+                 3: 4, 
+                 4: 3, 
+                 5: 2,
+                 6: 1,
+                 }
+        r = self.round[irc.network][channel]
+        return round[r] - self.casesOpened[irc.network][channel]
+
     @wrap(['inChannel'])
     def start(self, irc, msg, args, channel):
         """takes no arguments
@@ -109,11 +134,58 @@ class DOND(callbacks.Plugin):
         if self.player[irc.network][channel]:
             irc.error(_('A game is already in progress in this channel.'))
             return
-
-        irc.reply('Welcome to the game of Deal Or No Deal!', prefixNick=True)
+        
         self.player[irc.network][channel] = msg.nick
-        self.checkList[irc.network][channel] = {}
-        irc.reply(_("Available cases: %s") % self._unopened_cases(irc, channel))
+        self.checkList[irc.network][channel] = set()
+        self.boxes[irc.network][channel] = [0.01, 1, 5, 10, 25, 50, 75, 100, 200, 300, 400, 500, 750, 1000, 5000, 10000, 25000, 50000, 75000, 100000, 200000, 300000, 400000, 500000, 750000, 1000000]
+        self.round[irc.network][channel] = 1
+        self.casesOpened[irc.network][channel] = 0
+        
+        irc.reply('Welcome to the game of Deal Or No Deal!', prefixNick=True)
+        irc.reply(_("Available cases: %s") % self._unopened(irc, channel))
+        irc.reply("Pick your case with ~dond pick") #Hard coded prefix ;(
+
+    @wrap(["inChannel"])
+    def cases(self, irc, msg, args, channel):
+        """Lists the current unopened cases"""
+        if self.player[irc.network][channel]:
+                irc.reply(_("Available cases: %s") % self._unopened(irc, channel))
+                return
+        else:
+            return
+    
+    @wrap(['inChannel', "text"])
+    def pick(self, irc, msg, args, channel, text):
+        """Allows a player to pick a case"""
+    
+        if channel != msg.args[0]:
+            # The command is being called from a private message.
+            irc.error(_('This command may only be used in a channel.'))
+            return
+            
+        if self.player[irc.network][channel] == msg.nick:
+            parts = text.split()
+            
+            if not self.yourCase[irc.network][channel]:
+                if self._unopened(irc, channel, parts[0]):
+         
+                    self.checkList[irc.network][channel].add(str(parts[0]))
+                    case = random.choice(self.boxes[irc.network][channel])
+                    self.boxes[irc.network][channel].remove(case)
+                    self.yourCase[irc.network][channel] = parts[0]
+                    self.yourCaseValue[irc.network][channel] = case
+                    irc.reply(_("Case %s picked. You can now open cases using ~dond pick #") % parts[0]) # Hard coded prefix ;(
+                    irc.reply(_("You need to open %s cases") % self._casesRequired(irc, channel))
+                    return
+                else:
+                    irc.reply(_("%s is not a vaild case number") % parts[0])
+                    return 
+            #if self.casesOpened[irc.network][channel] < self._cases_required(self, channel):
+                
+            
+        else:
+            irc.error("You aren't currently playing!")
+            return
 
     @wrap(['channel'])
     def status(self, irc, msg, args, channel):
@@ -145,7 +217,7 @@ class DOND(callbacks.Plugin):
         isOp = (irc.state.channels[channel].isOp(msg.nick) or
                 ircdb.checkCapability(msg.prefix, cap))
 
-        if not self.player[irc.network][channel]:
+        if self.player[irc.network][channel] is None:
             irc.error(_('No game is currently running in %s.' % channel))
             return
 
