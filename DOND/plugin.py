@@ -59,7 +59,7 @@ class DOND(callbacks.Plugin):
         self.YourCaseValue = defaultdict(lambda: defaultdict(str))
 
     def _unopened_cases(self, irc, channel):
-        numbers = [1, 2 ,3 ,3 ,3 ,3 ,4 ,5, 6, 7, 8, 9, 10, 11, 12, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26]
+        numbers = [1, 2, 3, 4 ,5, 6, 7, 8, 9, 10, 11, 12, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26]
         return ", ".join((str(item) for item in numbers if item not in self.checkList[irc.network][channel]))
         
         
