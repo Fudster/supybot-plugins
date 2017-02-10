@@ -76,10 +76,11 @@ class DOND(callbacks.Plugin):
         return ", ".join(unopened)
         
         
-    def _stopGame(self, irc, msg, channel=None, forced=None):
+    def _stopGame(self, irc, msg, channel=None, forced=None, silent=None):
         channel = channel or msg.args[0]
         del self.player[irc.network][channel]
-
+        if silent is True:
+            return
         if forced is None:
             irc.reply(_('Game stopped.'))
         else:
@@ -118,7 +119,7 @@ class DOND(callbacks.Plugin):
                  6: 1,
                  }
         r = self.round[irc.network][channel]
-        return round[r] - self.casesOpened[irc.network][channel]
+        return round[r] 
 
     @wrap(['inChannel'])
     def start(self, irc, msg, args, channel):
@@ -140,7 +141,7 @@ class DOND(callbacks.Plugin):
         self.boxes[irc.network][channel] = [0.01, 1, 5, 10, 25, 50, 75, 100, 200, 300, 400, 500, 750, 1000, 5000, 10000, 25000, 50000, 75000, 100000, 200000, 300000, 400000, 500000, 750000, 1000000]
         self.round[irc.network][channel] = 1
         self.casesOpened[irc.network][channel] = 0
-        
+
         irc.reply('Welcome to the game of Deal Or No Deal!', prefixNick=True)
         irc.reply(_("Available cases: %s") % self._unopened(irc, channel))
         irc.reply("Pick your case with ~dond pick") #Hard coded prefix ;(
@@ -165,7 +166,6 @@ class DOND(callbacks.Plugin):
             
         if self.player[irc.network][channel] == msg.nick:
             parts = text.split()
-            
             if not self.yourCase[irc.network][channel]:
                 if self._unopened(irc, channel, parts[0]):
          
@@ -180,13 +180,57 @@ class DOND(callbacks.Plugin):
                 else:
                     irc.reply(_("%s is not a vaild case number") % parts[0])
                     return 
-            #if self.casesOpened[irc.network][channel] < self._cases_required(self, channel):
-                
-            
-        else:
-            irc.error("You aren't currently playing!")
-            return
+            numbers = set()
+            for i in parts:
+                if self.casesOpened[irc.network][channel] >= self._casesRequired(irc, channel):
+                    break
+                if self._unopened(irc, channel, i):
+                    self.casesOpened[irc.network][channel] += 1
+                    self.checkList[irc.network][channel].add(i)
+                    case = random.choice(self.boxes[irc.network][channel])
+                    self.boxes[irc.network][channel].remove(case)
+                    numbers.add("$" + str("{:,}".format(case)))
+            numbers = str(", ".join(numbers))
+            if len(numbers) >= 1:
+                irc.reply(_("You have opened %s") % numbers)
+            if self.casesOpened[irc.network][channel] >= self._casesRequired(irc, channel) and not self.bankOffer[irc.network][channel]:
+                irc.reply("ring ring! The banker is calling.....")
+                return
 
+    @wrap(['channel', 'text'])
+    def banker(self, irc, msg, args, channel, text):
+        """Banker command"""
+        if channel != msg.args[0]:
+            # The command is being called from a private message.
+            irc.error(_('This command may only be used in a channel.'))
+            return
+        if self.player[irc.network][channel] == msg.nick:
+            parts = text.split()
+            if parts[0].lower() == "answer" and not self.bankOffer[irc.network][channel]:
+                plist = [0.80, 0.85, 0.85, 0.90, 0.95]
+                percent = random.choice(plist)
+                boxes = self.boxes[irc.network][channel]
+                self.bankOffer[irc.network][channel] = "$" + str("{:,}".format(int(sum(boxes)/float(len(boxes) * percent))))
+                irc.reply(_("The Banker's offer is %s" % self.bankOffer[irc.network][channel]))
+            if parts[0].lower() == "accept" or parts[0].lower() == "a":
+                #TODO (stats logic)
+                irc.reply(_("You have won %s") % self.bankOffer)
+                self._stopGame(irc, msg, silent=True)
+                return
+            if parts[0].lower() == "decline" or parts[0].lower() == "d":
+                #nextRound(self, irc, channel)
+                return
+            irc.reply(_("The Banker's offer is %s" % self.bankOffer[irc.network][channel]))
+            irc.reply("To accept: ~dond accept", prefixNick=False) #Hard coded Prefix ;( 
+            irc.reply("To decline: ~dond decline", prefixNick=False)
+            return
+    @wrap(['channel'])
+    def test(self, irc, msg, args, channel):
+        """Just a test commmand"""
+        irc.reply(self._casesRequired(irc, channel))
+        irc.reply(self.casesOpened[irc.network][channel])
+        return
+        
     @wrap(['channel'])
     def status(self, irc, msg, args, channel):
         """[<channel>]
