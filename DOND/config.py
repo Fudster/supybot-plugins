@@ -46,11 +46,11 @@ def configure(advanced):
     from supybot.questions import expect, anything, something, yn
     conf.registerPlugin('DOND', True)
 
+
 DOND = conf.registerPlugin('DOND')
 # This is where your configuration variables (if any) should go.  For example:
 # conf.registerGlobalValue(DOND, 'someConfigVariableName',
 #     registry.Boolean(False, _("""Help for someConfigVariableName.""")))
-conf.registerChannelValue(DOND, 'enable',
-    registry.Boolean(False, _("""Determines whether the bot will allow Dead or NO Deal to be played.""")))
+
 
 # vim:set shiftwidth=4 tabstop=4 expandtab textwidth=79:
