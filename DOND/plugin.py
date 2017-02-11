@@ -142,7 +142,10 @@ class DOND(callbacks.Plugin):
 
     @wrap(['inChannel'])
     def cases(self, irc, msg, args, channel):
-        """Lists the current unopened cases"""
+        """takes no arguments
+
+        Lists the current unopened cases."""
+        
         if self.player[irc.network][channel]:
                 irc.reply(_('Available cases: %s') % self._unopened(irc, channel))
                 return
@@ -151,7 +154,9 @@ class DOND(callbacks.Plugin):
     
     @wrap(['inChannel', 'text'])
     def pick(self, irc, msg, args, channel, text):
-        """Allows a player to pick a case"""
+        """<Case>
+
+        Allows a player to pick a case."""
     
         if channel != msg.args[0]:
             # The command is being called from a private message.
@@ -192,11 +197,16 @@ class DOND(callbacks.Plugin):
 
     @wrap(['channel', 'text'])
     def banker(self, irc, msg, args, channel, text):
-        """Banker command"""
+        """[<Accept/Decline>]
+
+        Allows the player to Accept or Decline the Banker offer, 
+        If arguments are given shows the currnet Banker offer. 
+        """
         if channel != msg.args[0]:
             # The command is being called from a private message.
             irc.error(_('This command may only be used in a channel.'))
             return
+
         if self.player[irc.network][channel] == msg.nick:
             parts = text.split()
             if parts[0].lower() == 'answer' and not self.bankOffer[irc.network][channel]:
@@ -211,7 +221,7 @@ class DOND(callbacks.Plugin):
                 self._stopGame(irc, msg, silent=True)
                 return
             if parts[0].lower() == 'decline' or parts[0].lower() == "d":
-                #nextRound(self, irc, channel)
+                #TODO nextRound()
                 return
             irc.reply(_('The Banker's offer is %s' % self.bankOffer[irc.network][channel]))
             irc.reply('To accept: dond accept', prefixNick=False) #Hard coded Prefix ;( 
