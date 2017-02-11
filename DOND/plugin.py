@@ -173,11 +173,28 @@ class DOND(callbacks.Plugin):
                     self.boxes[irc.network][channel].remove(case)
                     self.yourCase[irc.network][channel] = parts[0]
                     self.yourCaseValue[irc.network][channel] = case
-                    irc.reply(_('Case %s picked. You can now open cases using dond pick <number>') % parts[0])
+                    irc.reply(_('Case %s picked. You can now open cases using dond open <numbers>. You need to open %s cases.') % (parts[0], self._casesRequired(irc, channel)))
                     return
                 else:
                     irc.reply(_('%s is not a vaild case number') % parts[0])
                     return 
+
+    @wrap(['inChannel', 'text'])
+    def open(self, irc, msg, args, channel, text):
+        """<Case>
+
+        Allows a player to pick a case."""
+    
+        if channel != msg.args[0]:
+            # The command is being called from a private message.
+            irc.error(_('This command may only be used in a channel.'))
+            return
+        if not self.yourCase[irc.network][channel]:
+            irc.error('Pick a case first using dond pick')
+            return
+        
+        if self.player[irc.network][channel] == msg.nick:
+            parts = text.split()
             numbers = set()
             for i in parts:
                 if self.casesOpened[irc.network][channel] >= self._casesRequired(irc, channel):
@@ -190,9 +207,11 @@ class DOND(callbacks.Plugin):
                     numbers.add('$' + str('{:,}'.format(case)))
             numbers = str(', '.join(numbers))
             if len(numbers) >= 1:
-                irc.reply(_('You have opened %s') % numbers)
-            if self.casesOpened[irc.network][channel] >= self._casesRequired(irc, channel) and not self.bankOffer[irc.network][channel]:
-                irc.reply('ring ring! The banker is calling.....')
+                irc.reply(_('You have opened: %s') % numbers)
+            return
+
+            if self.casesOpened[irc.network][channel] >= self._casesRequired(irc, channel) and self.bankOffer[irc.network][channel]:
+                irc.reply('The banker is waiting....' )
                 return
 
     @wrap(['channel', 'text'])
@@ -202,6 +221,7 @@ class DOND(callbacks.Plugin):
         Allows the player to Accept or Decline the Banker offer, 
         If arguments are given shows the currnet Banker offer. 
         """
+
         if channel != msg.args[0]:
             # The command is being called from a private message.
             irc.error(_('This command may only be used in a channel.'))
