@@ -227,13 +227,7 @@ class DOND(callbacks.Plugin):
             irc.reply('To accept: dond accept', prefixNick=False) #Hard coded Prefix ;( 
             irc.reply('To decline: dond decline', prefixNick=False)
             return
-    @wrap(['channel'])
-    def test(self, irc, msg, args, channel):
-        """Just a test commmand"""
-        irc.reply(self._casesRequired(irc, channel))
-        irc.reply(self.casesOpened[irc.network][channel])
-        return
-        
+
     @wrap(['channel'])
     def status(self, irc, msg, args, channel):
         """[<channel>]
