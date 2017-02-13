@@ -46,7 +46,7 @@ class DOND(callbacks.Plugin):
     def __init__(self, irc):
         self.__parent = super(DOND, self)
         self.__parent.__init__(irc)
-        
+
         #Track If game is running on Network/Channel, If who is playing.
         self.player =  defaultdict(lambda: defaultdict(str))
 
@@ -105,15 +105,15 @@ class DOND(callbacks.Plugin):
                 self._stopGame(irc, msg)
 
     def _casesRequired(self, irc, channel):
-        round = {1: 6, 
-                 2: 5, 
-                 3: 4, 
-                 4: 3, 
+        round = {1: 6,
+                 2: 5,
+                 3: 4,
+                 4: 3,
                  5: 2,
                  6: 1,
                  }
         r = self.round[irc.network][channel]
-        return round[r] 
+        return round[r]
 
     @wrap(['inChannel'])
     def start(self, irc, msg, args, channel):
@@ -129,7 +129,7 @@ class DOND(callbacks.Plugin):
         if self.player[irc.network][channel]:
             irc.error(_('A game is already in progress in this channel.'))
             return
-        
+
         self.player[irc.network][channel] = msg.nick
         self.checkList[irc.network][channel] = set()
         self.boxes[irc.network][channel] = [0.01, 1, 5, 10, 25, 50, 75, 100, 200, 300, 400, 500, 750, 1000, 5000, 10000, 25000, 50000, 75000, 100000, 200000, 300000, 400000, 500000, 750000, 1000000]
@@ -138,36 +138,36 @@ class DOND(callbacks.Plugin):
 
         irc.reply('Welcome to the game of Deal Or No Deal!', prefixNick=True)
         irc.reply(_('Available cases: %s') % self._unopened(irc, channel))
-        irc.reply('Pick your case with: dond pick') 
+        irc.reply('Pick your case with: dond pick')
 
     @wrap(['inChannel'])
     def cases(self, irc, msg, args, channel):
         """takes no arguments
 
         Lists the current unopened cases."""
-        
+
         if self.player[irc.network][channel]:
                 irc.reply(_('Available cases: %s') % self._unopened(irc, channel))
                 return
         else:
             return
-    
+
     @wrap(['inChannel', 'text'])
     def pick(self, irc, msg, args, channel, text):
         """<Case>
 
         Allows a player to pick a case."""
-    
+
         if channel != msg.args[0]:
             # The command is being called from a private message.
             irc.error(_('This command may only be used in a channel.'))
             return
-            
+
         if self.player[irc.network][channel] == msg.nick:
             parts = text.split()
             if not self.yourCase[irc.network][channel]:
                 if self._unopened(irc, channel, parts[0]):
-         
+
                     self.checkList[irc.network][channel].add(str(parts[0]))
                     case = random.choice(self.boxes[irc.network][channel])
                     self.boxes[irc.network][channel].remove(case)
@@ -177,14 +177,14 @@ class DOND(callbacks.Plugin):
                     return
                 else:
                     irc.reply(_('%s is not a vaild case number') % parts[0])
-                    return 
+                    return
 
     @wrap(['inChannel', 'text'])
     def open(self, irc, msg, args, channel, text):
         """<Case>
 
         Allows a player to pick a case."""
-    
+
         if channel != msg.args[0]:
             # The command is being called from a private message.
             irc.error(_('This command may only be used in a channel.'))
@@ -192,7 +192,7 @@ class DOND(callbacks.Plugin):
         if not self.yourCase[irc.network][channel]:
             irc.error('Pick a case first using dond pick')
             return
-        
+
         if self.player[irc.network][channel] == msg.nick:
             parts = text.split()
             numbers = set()
@@ -218,8 +218,8 @@ class DOND(callbacks.Plugin):
     def banker(self, irc, msg, args, channel, text):
         """[<Accept/Decline>]
 
-        Allows the player to Accept or Decline the Banker offer, 
-        If arguments are given shows the currnet Banker offer. 
+        Allows the player to Accept or Decline the Banker offer,
+        If arguments are given shows the currnet Banker offer.
         """
 
         if channel != msg.args[0]:
