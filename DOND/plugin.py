@@ -73,8 +73,17 @@ class DOND(callbacks.Plugin):
     def _stopGame(self, irc, msg, channel=None, forced=None, silent=None):
         channel = channel or msg.args[0]
         del self.player[irc.network][channel]
+        del self.boxes[irc.network][channel]
+        del self.checkList [irc.network][channel]
+        del self.yourCase[irc.network][channel]
+        del self.yourCaseValue[irc.network][channel]
+        del self.bankOffer[irc.network][channel]
+        del self.round[irc.network][channel]
+        del self.casesOpened[irc.network][channel]
+
         if silent is True:
             return
+
         if forced is None:
             irc.reply(_('Game stopped.'))
         else:
