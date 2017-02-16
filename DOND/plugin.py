@@ -60,6 +60,24 @@ class DOND(callbacks.Plugin):
         #Number of cases opened this round.
         self.casesOpened = defaultdict(lambda: defaultdict(str))
 
+    def _casesRequired(self, irc, channel):
+        round = {1: 6,
+                 2: 5,
+                 3: 4,
+                 4: 3,
+                 5: 2,
+                 6: 1,
+                 }
+        r = self.round[irc.network][channel]
+        return round[r]
+
+    def _nextRound(self, irc, channel): 
+        del self.bankOffer[irc.network][channel]
+        self.round[irc.network][channel] += 1
+        self.casesOpened[irc.network][channel] = 0
+        irc.reply(_('Round %s') % self.round[irc.network][channel])
+        return
+
     def _unopened(self, irc, channel, case=None):
         numbers = list(range(1, 27))
         unopened = [str(item) for item in map(str, numbers) if item not in self.checkList[irc.network][channel]]
@@ -112,17 +130,6 @@ class DOND(callbacks.Plugin):
         for channel in self.player:
             if self.player[irc.network][channel] == msg.nick:
                 self._stopGame(irc, msg)
-
-    def _casesRequired(self, irc, channel):
-        round = {1: 6,
-                 2: 5,
-                 3: 4,
-                 4: 3,
-                 5: 2,
-                 6: 1,
-                 }
-        r = self.round[irc.network][channel]
-        return round[r]
 
     @wrap(['inChannel'])
     def start(self, irc, msg, args, channel):
@@ -179,7 +186,7 @@ class DOND(callbacks.Plugin):
 
                     self.checkList[irc.network][channel].add(str(parts[0]))
                     case = random.choice(self.boxes[irc.network][channel])
-                    self.boxes[irc.network][channel].remove(case)
+                    self.boxes[irc.network][channel].remove(int(case))
                     self.yourCase[irc.network][channel] = parts[0]
                     self.yourCaseValue[irc.network][channel] = case
                     irc.reply(_('Case %s picked. You can now open cases using dond open <numbers>. You need to open %s cases.') % (parts[0], self._casesRequired(irc, channel)))
@@ -187,7 +194,16 @@ class DOND(callbacks.Plugin):
                 else:
                     irc.reply(_('%s is not a vaild case number') % parts[0])
                     return
+    
+    @wrap(['channel'])
+    def test(self, irc, msg, args, channel):
+        """takes no arguments
 
+        Lists the current unopened cases."""
+
+        irc.reply(_('Player: %s, boxes %s, Checklist: %s, yourCase: %s, yourCaseValue: %s, bankOffer: %s, round: %s, cases: %s') % (self.player[irc.network][channel], self.boxes[irc.network][channel], self.checkList [irc.network][channel], self.yourCase[irc.network][channel], self.yourCaseValue[irc.network][channel], self.bankOffer[irc.network][channel], self.round[irc.network][channel], self.casesOpened[irc.network][channel]))
+        return
+ 
     @wrap(['inChannel', 'text'])
     def open(self, irc, msg, args, channel, text):
         """<Case>
@@ -253,7 +269,7 @@ class DOND(callbacks.Plugin):
                 return
 
             if parts[0].lower() == 'decline' or parts[0].lower() == "d":
-                #TODO nextRound()
+                self._nextRound(irc, channel)
                 return
 
             irc.reply(_("The Banker's offer is %s" % self.bankOffer[irc.network][channel]))
