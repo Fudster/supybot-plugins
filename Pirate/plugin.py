@@ -73,6 +73,9 @@ class Pirate(callbacks.Plugin):
             "where is": "whar be",
             "happy":    "grog-filled",
             "mail":     "market",
+            "friend":   "mate",
+            "money":    "doubloons",
+            "food":     "grub",
         }
         exclude = set(string.punctuation)
         def pun(s):
